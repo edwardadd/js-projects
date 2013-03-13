@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+	<title>Snakevolution</title>
+	<script type="text/javascript" src="game.js"></script>
+	<style type="text/css">
+		body { margin: 0; padding: 0; background-color: #000000; color: #FFF; font-size: 14px; font-family: sans-serif;}
+		/*.main_container { margin-left: auto; margin-right: auto; }*/
+		canvas { margin-left: auto; margin-right: auto; display: block; }
+		.stats_container { margin-left: auto; margin-right: auto; width: 320px; height: 30px; background-color: #FFF; color: #000}
+		.stats_container div { display: inline; height: 44px;}
+	</style>
+</head>
+<body>
+	<audio id='eat_sound'>
+		<source src="eat.wav" type='audio/wav'>
+	</audio>
+	<audio id='start_sound'>
+		<source src='start.wav' type='audio/wav'>
+	</audio>
+	<audio id='death_sound'>
+		<source src='death.wav' type='audio/wav'>
+	</audio>
+	<div class="main_container">
+		<canvas id="gameCanvas" tabindex="0">
+		Canvas not supported!
+		</canvas>
+		<div class="stats_container">
+			<button id="turbo_button">Turbo</button>
+			<div><strong>Score: </strong><div id="score_stat">00000000</div></div>
+			<div><strong>Highscore: </strong><div id="highscore_stat">00000000</div></div>
+		</div>
+	</div>
+</body>
+</html>

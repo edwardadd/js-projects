@@ -1,0 +1,54 @@
+<html>
+<head>
+<title>3D Prototype</title>
+<script type="text/javascript" src="rasteriser3d.js"></script>
+</head>
+<body>
+<canvas id="gameCanvas" width="640" height="480">
+Canvas not supported!
+</canvas>
+<script type="text/javascript">
+	var Test = new Game();
+
+	Test.Initialize();
+
+	var ScreenMatrix = Test.wvp.Translate( 320, 240, 0 );
+	var WorldMatrix = Test.wvp.Translate( 0, 0, 0 );
+
+	console.log("World");
+	WorldMatrix.Log();
+
+	Test.wvp = Test.wvp.Multiply( WorldMatrix, Test.viewMatrix);
+	Test.wvp = Test.wvp.Multiply( Test.wvp, Test.projMatrix);
+
+	//Test.projMatrix.Identity();
+	//ScreenMatrix = ScreenMatrix.Multiply( ScreenMatrix, Test.projMatrix);
+	//Test.wvp = Test.wvp.Multiply( Test.projMatrix, Test.viewMatrix);
+	// Test.wvp = Test.wvp.Multiply( ScreenMatrix, Test.viewMatrix);
+	// Test.wvp = Test.wvp.Multiply( Test.wvp, WorldMatrix );
+
+	console.log("View");
+	Test.viewMatrix.Log();
+
+	console.log("proj");
+	Test.projMatrix.Log();
+
+	console.log("wvp");
+	Test.wvp.Log();
+	
+	//Test.wvp = Test.wvp.Multiply( Test.viewMatrix, Test.projMatrix);
+
+	// Test.wvp = Test.wvp.Multiply( Test.projMatrix, Test.viewMatrix);
+	// Test.wvp = Test.wvp.Multiply( Test.wvp, WorldMatrix );
+
+	//var Result = Test.wvp.Apply(new Point(0, 0, 0));
+	
+	var Result = Test.wvp.Apply(new Point(-320, 0, 0));
+
+	// Expected  ~ 320, 240
+
+	console.log("Result: " + Result.x + ", " + Result.y + ", " + Result.z + ", " + Result.w);
+</script>
+
+</body>
+</html>

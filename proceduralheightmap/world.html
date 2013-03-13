@@ -1,0 +1,17 @@
+<html>
+<head>
+<title>World Gen</title>
+<script type="text/javascript" src="seedrandom-min.js"></script>
+<script type="text/javascript" src="world.js"></script>
+</head>
+<body style="padding:0px; margin:0px;" onresize="onResize();">
+<div id="controlbox">
+Seed:<input type="text" id="seedtextbox" value="0" onchange="onChange();" /><br>
+Size (Power of 2 + 1):<input type="text" id="sizetextbox" value="129" onchange="onChange();" /><br>
+Scale:<input type="text" id="scaletextbox" value="0.9" onchange="onChange();"/><br>
+</div>
+<canvas id="maincanvas">
+Canvas not supported!
+</canvas>
+</body>
+</html>
