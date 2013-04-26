@@ -46,13 +46,30 @@ function Triangle( _a, _b, _c) {
   this.colour = { r: 255, g: 0, b: 0, a: 255};
 }
 
+function NormToScreen(Result)
+{
+  Result.x = (Result.x + 1) * 0.5 * 640;
+  Result.y = (Result.y + 1) * 0.5 * 480;
+
+  return Result;
+}
+
 Triangle.prototype.Draw = function( _canvasContext, wvp ) {
 
   //console.time("ApplyingWVPMatrix");
-  var oa = wvp.Apply(this.a.p);
-  var ob = wvp.Apply(this.b.p);
-  var oc = wvp.Apply(this.c.p);
+  var oa = wvp.ApplyRowVector(this.a.p);
+  var ob = wvp.ApplyRowVector(this.b.p);
+  var oc = wvp.ApplyRowVector(this.c.p);
   //console.timeEnd("ApplyingWVPMatrix");
+
+  if(oa.x < -1 || oa.y < -1 || oa.x > 1 || oa.y > 1 ||
+    ob.x < -1 || ob.y < -1 || ob.x > 1 || ob.y > 1 ||
+    oc.x < -1 || oc.y < -1 || oc.x > 1 || oc.y > 1)
+    return;
+
+  oa = NormToScreen(oa);
+  ob = NormToScreen(ob);
+  oc = NormToScreen(oc);
 
   // oa = document.edGame.Convert2D(oa);
   // ob = document.edGame.Convert2D(ob);
@@ -209,7 +226,7 @@ Matrix4x4.prototype.Multiply = function( m1, m2 )
   return result;
 };
 
-Matrix4x4.prototype.Apply = function( point )
+Matrix4x4.prototype.ApplyRowVector = function( point )
 {
   var p = new Point(0, 0, 0);
   p.x = this.value[0] * point.x +
@@ -232,7 +249,39 @@ Matrix4x4.prototype.Apply = function( point )
         this.value[14] * point.z +
         this.value[15] * point.w;
 
-  if(p.w !== 1.0 && p.w != 0) {
+  if(p.w !== 1.0 && p.w !== 0) {
+    p.x = p.x / p.w;
+    p.y = p.y / p.w;
+    p.z = p.z / p.w;
+    p.w = p.w / p.w;
+  }
+  return p;
+};
+
+Matrix4x4.prototype.ApplyColumnVector = function( point )
+{
+  var p = new Point(0, 0, 0);
+  p.x = this.value[0] * point.x +
+        this.value[4] * point.y +
+        this.value[8] * point.z +
+        this.value[12] * point.w;
+
+  p.y = this.value[1] * point.x +
+        this.value[5] * point.y +
+        this.value[9] * point.z +
+        this.value[13] * point.w;
+
+  p.z = this.value[2] * point.x +
+        this.value[6] * point.y +
+        this.value[10] * point.z +
+        this.value[14] * point.w;
+
+  p.w = this.value[3] * point.x +
+        this.value[7] * point.y +
+        this.value[11] * point.z +
+        this.value[15] * point.w;
+
+  if(p.w !== 1.0 && p.w !== 0) {
     p.x = p.x / p.w;
     p.y = p.y / p.w;
     p.z = p.z / p.w;
@@ -250,10 +299,6 @@ Matrix4x4.prototype.Log = function () {
 };
 
 function Game() {
-
-  this.DrawInterval = 1;
-  this.GameLoop = null;
-
   var _canvas;
   var _canvasContext;
 
@@ -274,7 +319,7 @@ function Game() {
 
 
     //cube
-    var scale = 25;
+    var scale = 5;
 
     // back
     this.polygons.push( new Triangle( new Vertex(-scale,scale,-scale, 0, 1), new Vertex( scale, scale, -scale, 1, 1 ), new Vertex( scale, -scale, -scale, 1, 0 )));
@@ -323,12 +368,12 @@ function Game() {
 
   this.CreateViewMatrix = function () {
     var lookat = new Point(0, 0, 0);
-    var c = new Point(0, 10, -50);
+    var c = new Point(0, 0, -50);
     var u = new Point(0, 0, 0);
     var v = new Point(0, 0, 0);
     var w = new Point(0, 0, 0);
 
-    w = w.Sub(c, lookat);
+    w = w.Sub(lookat, c);
     w.Normalise();
 
     u = u.Cross(new Point(0, 1, 0), w);
@@ -365,23 +410,53 @@ function Game() {
   this.CreateProjectionMatrix = function () {
     this.projMatrix.Identity();
 
-    // var far = 1000;
-    // var near = 1;
+    var f = 100;
+    var n = 0.1;
 
-    // var fov = 90;
-    // var FovScale = 1 / Math.tan((fov * 0.5) /** Math.PI / 180*/);
-    // this.projMatrix.value[0] = FovScale;
-    // this.projMatrix.value[5] = FovScale / (_canvas.height / _canvas.width);
-    // this.projMatrix.value[10] = - far / (far - near);
-    // this.projMatrix.value[11] = - 2 * far * near / (far - near);
-    // this.projMatrix.value[14] = - 1;
-    // this.projMatrix.value[15] = 0;
+    var fov = 45;
+    var scale = Math.tan(fov * 0.5) * n;
+    var r = (_canvas.height / _canvas.width) * scale;
+    var l = -r;
+    var t = scale;
+    var b = -t;
 
-    //var
-      // l = _canvas.width * 0.5,
-      // r = -_canvas.width * 0.5,
-      // t = _canvas.height * 0.5,
-      // b = -_canvas.height * 0.5;
+    var mat = this.projMatrix.value;
+
+    mat[14] = -1;
+
+    // mat[0] = 2 * n / (r - l);
+    // mat[1] = 0;
+    // mat[2] = 0;
+    // mat[3] = 0;
+
+    // mat[4] = 0;
+    // mat[5] = 2 * n / (t - b);
+    // mat[6] = 0;
+    // mat[7] = 0;
+
+    // mat[8] = (t + l) / (r - l);
+    // mat[9] = (t + b) / (t - b);
+    // mat[10] = -(f + n) / (f - n);
+    // mat[11] = -1;
+
+    // mat[12] = 0;
+    // mat[13] = 0;
+    // mat[14] = -2 * f * n / (f - n);
+    // mat[15] = 0;
+
+    var FovScale = Math.tan(Math.PI * 0.5 - (fov * 0.5) );
+    this.projMatrix.value[0] = FovScale;
+    this.projMatrix.value[5] = FovScale;
+    this.projMatrix.value[10] = - f / (f - n);
+    this.projMatrix.value[11] = - 2 * f * n / (f - n);
+    this.projMatrix.value[14] = - 1;
+    this.projMatrix.value[15] = 0;
+
+    // var
+    //   l = _canvas.width * 0.5,
+    //   r = -_canvas.width * 0.5,
+    //   t = _canvas.height * 0.5,
+    //   b = -_canvas.height * 0.5;
     //   l = -_canvas.width * 0.5,
     //   r = _canvas.width * 0.5,
     //   t = -_canvas.height * 0.5,
@@ -390,24 +465,26 @@ function Game() {
     // this.projMatrix.value[0] = (2 * near) / (r - l);
     // this.projMatrix.value[2] = (r + l) / (r - l);
     // this.projMatrix.value[5] = (2 * near) / (t - b);
-    // this.projMatrix.value[5] = (t + b) / (t - b);
+    // this.projMatrix.value[7] = (t + b) / (t - b);
     // this.projMatrix.value[10] = - far / (far - near);
     // this.projMatrix.value[11] = - far * near / (far - near);
     // this.projMatrix.value[14] = - 1;
     // this.projMatrix.value[15] = 0;
 
     // this.projMatrix.value[10] = - 1;
-    this.projMatrix.value[11] = - 1;
-    this.projMatrix.value[15] = 0;
+    // this.projMatrix.value[14] = - 1;
+    // this.projMatrix.value[15] = 0;
   };
 
   this.LoadContent = function () {
-    this.GameLoop = setInterval(this.RunGameLoop, this.DrawInterval);
+    window.requestAnimFrame(this.RunGameLoop);
   };
 
   this.RunGameLoop = function (game) {
+
     document.edGame.Update();
     document.edGame.Draw();
+    window.requestAnimFrame(document.edGame.RunGameLoop);
   };
 
   this.Run = function () {
@@ -426,29 +503,28 @@ function Game() {
 
     //console.time("Matrices");
 		this.wvp.Identity();
-    //var roty = this.wvp.RotateY(this.angle);
-    //var rotx = this.wvp.RotateX(this.angle);
-		//var rotz = this.wvp.RotateZ(this.angle);
+  //   var roty = this.wvp.RotateY(this.angle);
+  //   var rotx = this.wvp.RotateX(this.angle);
+		// var rotz = this.wvp.RotateZ(this.angle);
     var WorldMatrix = this.wvp.Translate( 0, 0, 0 );
 
-    //var fin = this.wvp.Multiply( transm, rotx);
-    //fin = this.wvp.Multiply( fin, roty);
-    //fin = this.wvp.Multiply( fin, rotz);
+    // var fin = this.wvp.Multiply( WorldMatrix, rotx);
+    // fin = this.wvp.Multiply( fin, roty);
+    // fin = this.wvp.Multiply( fin, rotz);
 
-    // WorldMatrix = this.wvp.Multiply( WorldMatrix, this.viewMatrix);
-    // this.wvp = this.wvp.Multiply( WorldMatrix, this.projMatrix);
+    WorldMatrix = this.wvp.Multiply( WorldMatrix, this.viewMatrix);
+    this.wvp = this.wvp.Multiply( WorldMatrix, this.projMatrix);
 
-    this.wvp = this.wvp.Multiply( this.projMatrix, this.viewMatrix);
-    this.wvp = this.wvp.Multiply( this.wvp, WorldMatrix );
+    // this.wvp = this.wvp.Multiply( this.projMatrix, this.viewMatrix);
+    // this.wvp = this.wvp.Multiply( this.wvp, fin );
 
     //console.timeEnd("Matrices");
   };
 
   this.Convert2D = function( point )
   {
-    var w = 1;
     var value = new Point();
-    var scale = 0.5; // w / point.z;
+    var scale = 0.5;
     value.x = Round(point.x / scale + _canvas.width * 0.5);
     value.y = Round(-point.y / scale + _canvas.height * 0.5);
     value.z = Round(point.z);
@@ -475,3 +551,15 @@ function Game() {
     }
   };
 }
+
+// shim layer with setTimeout fallback
+window.requestAnimFrame = (function () {
+  return window.requestAnimationFrame ||
+  window.webkitRequestAnimationFrame ||
+  window.mozRequestAnimationFrame ||
+  window.oRequestAnimationFrame ||
+  window.msRequestAnimationFrame ||
+  function (callback) {
+    window.setTimeout(callback, 1000 / 60);
+  };
+})();

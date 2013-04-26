@@ -12,13 +12,16 @@ Canvas not supported!
 
 	Test.Initialize();
 
-	var ScreenMatrix = Test.wvp.Translate( 320, 240, 0 );
+	// var ScreenMatrix = Test.wvp.Translate( 320, 240, 0 );
 	var WorldMatrix = Test.wvp.Translate( 0, 0, 0 );
 
 	console.log("World");
 	WorldMatrix.Log();
 
 	Test.wvp = Test.wvp.Multiply( WorldMatrix, Test.viewMatrix);
+	//console.log("World * View");
+	//Test.wvp.Log();
+
 	Test.wvp = Test.wvp.Multiply( Test.wvp, Test.projMatrix);
 
 	//Test.projMatrix.Identity();
@@ -43,9 +46,63 @@ Canvas not supported!
 
 	//var Result = Test.wvp.Apply(new Point(0, 0, 0));
 	
-	var Result = Test.wvp.Apply(new Point(-320, 0, 0));
+	var Result = Test.wvp.ApplyRowVector(new Point(0, 0, 0));
 
 	// Expected  ~ 320, 240
+	Result.x = (Result.x + 1) * 0.5 * 640;
+	Result.y = (Result.y + 1) * 0.5 * 480;
+
+	console.log("Result: " + Result.x + ", " + Result.y + ", " + Result.z + ", " + Result.w);
+
+	var Result = Test.wvp.ApplyRowVector(new Point(-10, 0, 0));
+
+	// Expected  ~ 320, 240
+	Result.x = (Result.x + 1) * 0.5 * 640;
+	Result.y = (Result.y + 1) * 0.5 * 480;
+
+	console.log("Result: " + Result.x + ", " + Result.y + ", " + Result.z + ", " + Result.w);
+
+
+	var Result = Test.wvp.ApplyRowVector(new Point(0, -10, 0));
+
+	// Expected  ~ 320, 240
+	Result.x = (Result.x + 1) * 0.5 * 640;
+	Result.y = (Result.y + 1) * 0.5 * 480;
+
+	console.log("Result: " + Result.x + ", " + Result.y + ", " + Result.z + ", " + Result.w);
+
+	var Result = Test.wvp.ApplyRowVector(new Point(0, 0, -10));
+
+	// Expected  ~ 320, 240
+	Result.x = (Result.x + 1) * 0.5 * 640;
+	Result.y = (Result.y + 1) * 0.5 * 480;
+
+	console.log("Result: " + Result.x + ", " + Result.y + ", " + Result.z + ", " + Result.w);
+
+
+	var Result = Test.wvp.ApplyRowVector(new Point(10, 0, 0));
+
+	// Expected  ~ 320, 240
+	Result.x = (Result.x + 1) * 0.5 * 640;
+	Result.y = (Result.y + 1) * 0.5 * 480;
+
+	console.log("Result: " + Result.x + ", " + Result.y + ", " + Result.z + ", " + Result.w);
+
+
+	var Result = Test.wvp.ApplyRowVector(new Point(0, 10, 0));
+
+	// Expected  ~ 320, 240
+	Result.x = (Result.x + 1) * 0.5 * 640;
+	Result.y = (Result.y + 1) * 0.5 * 480;
+
+	console.log("Result: " + Result.x + ", " + Result.y + ", " + Result.z + ", " + Result.w);
+
+
+	var Result = Test.wvp.ApplyRowVector(new Point(0, 0, 10));
+
+	// Expected  ~ 320, 240
+	Result.x = (Result.x + 1) * 0.5 * 640;
+	Result.y = (Result.y + 1) * 0.5 * 480;
 
 	console.log("Result: " + Result.x + ", " + Result.y + ", " + Result.z + ", " + Result.w);
 </script>
